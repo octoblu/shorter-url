@@ -17,6 +17,9 @@ func newRouter(mongoDB *mgo.Database, redisConn redis.Conn, redisNamespace, shor
 	cachedUrlsController := cachedurls.NewController(mongoDB, redisConn, redisNamespace, shortProtocol)
 
 	router := mux.NewRouter()
+	router.Methods("GET").Path("/healthcheck").HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.Write([]byte("{\"online\":true}"))
+	})
 	router.Methods("GET").Path("/version").HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.Write([]byte(fmt.Sprintf("{\"version\":\"%v\"}", version)))
 	})
