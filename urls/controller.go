@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/garyburd/redigo/redis"
+	"github.com/gorilla/mux"
+
 	mgo "gopkg.in/mgo.v2"
 )
 
@@ -13,12 +16,16 @@ import (
 type Controller interface {
 	// Create stores a new short url in the database
 	Create(rw http.ResponseWriter, r *http.Request)
+
+	// Delete removes a short url from the database
+	// and cache
+	Delete(rw http.ResponseWriter, r *http.Request)
 }
 
 // NewController returns a new controller instance
 // for managing urls
-func NewController(auth string, mongoDB *mgo.Database, shortProtocol string) Controller {
-	service := newService(mongoDB, shortProtocol)
+func NewController(auth string, cache redis.Conn, mongoDB *mgo.Database, redisNamespace, shortProtocol string) Controller {
+	service := newService(cache, mongoDB, redisNamespace, shortProtocol)
 	return &_Controller{auth: auth, service: service}
 }
 
@@ -28,9 +35,7 @@ type _Controller struct {
 }
 
 func (controller *_Controller) Create(rw http.ResponseWriter, r *http.Request) {
-	username, password, ok := r.BasicAuth()
-	parts := strings.Split(controller.auth, ":")
-	if !ok || username != parts[0] || password != parts[1] {
+	if !controller.authenticated(r.BasicAuth()) {
 		http.Error(rw, "Unauthorized", 401)
 		return
 	}
@@ -41,7 +46,7 @@ func (controller *_Controller) Create(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shorterURL, err := controller.service.Create(createBody.LongURL, r.URL.Scheme, r.Host)
+	shorterURL, err := controller.service.Create(createBody.LongURL, r.Host)
 	if err != nil {
 		http.Error(rw, fmt.Sprintf("Failed to create shorterUrl: %v", err.Error()), 500)
 		return
@@ -55,4 +60,29 @@ func (controller *_Controller) Create(rw http.ResponseWriter, r *http.Request) {
 
 	rw.WriteHeader(201)
 	rw.Write(response)
+}
+
+func (controller *_Controller) Delete(rw http.ResponseWriter, r *http.Request) {
+	if !controller.authenticated(r.BasicAuth()) {
+		http.Error(rw, "Unauthorized", 401)
+		return
+	}
+
+	token := mux.Vars(r)["token"]
+	err := controller.service.Delete(r.Host, token)
+	if err != nil {
+		http.Error(rw, fmt.Sprintf("Failed to delete shorterUrl: %v", err.Error()), 500)
+		return
+	}
+
+	rw.WriteHeader(204)
+}
+
+func (controller *_Controller) authenticated(username, password string, authPresent bool) bool {
+	if !authPresent {
+		return false
+	}
+
+	parts := strings.Split(controller.auth, ":")
+	return username == parts[0] && password == parts[1]
 }

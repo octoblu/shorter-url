@@ -12,18 +12,22 @@ import (
 	"github.com/octoblu/shorter-url/urls"
 )
 
-func newRouter(auth string, mongoDB *mgo.Database, redisConn redis.Conn, redisNamespace, shortProtocol, version string) http.Handler {
-	urlsController := urls.NewController(auth, mongoDB, shortProtocol)
-	cachedUrlsController := cachedurls.NewController(mongoDB, redisConn, redisNamespace, shortProtocol)
+func newRouter(auth string, cache redis.Conn, mongoDB *mgo.Database, redisNamespace, shortProtocol, version string) http.Handler {
+	urlsController := urls.NewController(auth, cache, mongoDB, redisNamespace, shortProtocol)
+	cachedUrlsController := cachedurls.NewController(cache, mongoDB, redisNamespace, shortProtocol)
 
 	router := mux.NewRouter()
+
 	router.Methods("GET").Path("/healthcheck").HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.Write([]byte("{\"online\":true}"))
 	})
 	router.Methods("GET").Path("/version").HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.Write([]byte(fmt.Sprintf("{\"version\":\"%v\"}", version)))
 	})
-	router.Methods("POST").Path("/api/urls").HandlerFunc(urlsController.Create)
+
+	router.Methods("POST").Path("/").HandlerFunc(urlsController.Create)
+	router.Methods("DELETE").Path("/{token}").HandlerFunc(urlsController.Delete)
 	router.Methods("GET").Path("/{token}").HandlerFunc(cachedUrlsController.Get)
+
 	return router
 }

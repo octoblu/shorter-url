@@ -55,13 +55,13 @@ func (server *HTTPServer) Run(onListen func()) error {
 		return err
 	}
 
-	redisConn, err := redis.DialURL(server.redisURL)
+	cache, err := redis.DialURL(server.redisURL)
 	if err != nil {
 		return err
 	}
 
 	addr := fmt.Sprintf(":%v", server.port)
-	router := newRouter(server.auth, mongoDB, redisConn, server.redisNamespace, server.shortProtocol, server.version)
+	router := newRouter(server.auth, cache, mongoDB, server.redisNamespace, server.shortProtocol, server.version)
 	onListen()
 	return http.ListenAndServe(addr, router)
 }

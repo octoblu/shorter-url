@@ -11,15 +11,15 @@ import (
 )
 
 type _Service struct {
-	redisConn      redis.Conn
+	cache          redis.Conn
 	redisNamespace string
 	shortProtocol  string
 	urls           *mgo.Collection
 }
 
-func newService(mongoDB *mgo.Database, redisConn redis.Conn, redisNamespace, shortProtocol string) *_Service {
+func newService(cache redis.Conn, mongoDB *mgo.Database, redisNamespace, shortProtocol string) *_Service {
 	return &_Service{
-		redisConn:      redisConn,
+		cache:          cache,
 		redisNamespace: redisNamespace,
 		shortProtocol:  shortProtocol,
 		urls:           mongoDB.C("urls"),
@@ -46,13 +46,13 @@ func (service *_Service) GetLongURL(host, token string) (string, error) {
 
 func (service *_Service) cacheLongURL(shortURL, longURL string) error {
 	key := fmt.Sprintf("%v:%v", service.redisNamespace, shortURL)
-	_, err := service.redisConn.Do("SET", key, longURL)
+	_, err := service.cache.Do("SET", key, longURL)
 	return err
 }
 
 func (service *_Service) getLongURLFromCache(shortURL string) (string, error) {
 	key := fmt.Sprintf("%v:%v", service.redisNamespace, shortURL)
-	longURL, err := redis.String(service.redisConn.Do("GET", key))
+	longURL, err := redis.String(service.cache.Do("GET", key))
 	if err != nil && err.Error() == "redigo: nil returned" {
 		return "", nil
 	}
