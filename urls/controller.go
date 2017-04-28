@@ -3,6 +3,7 @@ package urls
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	mgo "gopkg.in/mgo.v2"
 )
@@ -16,16 +17,24 @@ type Controller interface {
 
 // NewController returns a new controller instance
 // for managing urls
-func NewController(mongoDB *mgo.Database, shortProtocol string) Controller {
+func NewController(auth string, mongoDB *mgo.Database, shortProtocol string) Controller {
 	service := newService(mongoDB, shortProtocol)
-	return &_Controller{service: service}
+	return &_Controller{auth: auth, service: service}
 }
 
 type _Controller struct {
+	auth    string
 	service *_Service
 }
 
 func (controller *_Controller) Create(rw http.ResponseWriter, r *http.Request) {
+	username, password, ok := r.BasicAuth()
+	parts := strings.Split(controller.auth, ":")
+	if !ok || username != parts[0] || password != parts[1] {
+		http.Error(rw, "Unauthorized", 401)
+		return
+	}
+
 	createBody, err := parseCreateBody(r.Body)
 	if err != nil {
 		http.Error(rw, fmt.Sprintf("Could not parse request body: %v", err.Error()), 422)

@@ -61,7 +61,7 @@ func (server *HTTPServer) Run() error {
 	}
 
 	addr := fmt.Sprintf(":%v", server.port)
-	router := newRouter(mongoDB, redisConn, server.redisNamespace, server.shortProtocol, server.version)
+	router := newRouter(server.auth, mongoDB, redisConn, server.redisNamespace, server.shortProtocol, server.version)
 	return http.ListenAndServe(addr, router)
 }
 
