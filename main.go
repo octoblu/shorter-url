@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/coreos/go-semver/semver"
 	"github.com/octoblu/shorter-url/shorterurl"
@@ -49,27 +51,35 @@ func main() {
 			Usage:  "Redis db url to use for data caching",
 			Value:  "redis://localhost:6379",
 		},
+		cli.StringFlag{
+			Name:   "short-protocol, s",
+			EnvVar: "SHORT_PROTOCOL",
+			Usage:  "Protocol to use when generating short urls",
+			Value:  "https",
+		},
 	}
 	app.Run(os.Args)
 }
 
 func run(context *cli.Context) {
-	auth, mongoDBURL, port, redisNamespace, redisURL := getOpts(context)
+	auth, mongoDBURL, port, redisNamespace, redisURL, shortProtocol := getOpts(context)
 
-	server := shorterurl.New(auth, mongoDBURL, port, redisNamespace, redisURL)
+	rand.Seed(time.Now().UnixNano())
+	server := shorterurl.New(auth, mongoDBURL, port, redisNamespace, redisURL, shortProtocol)
 	fmt.Printf("Listening on 0.0.0.0:%v\n", port)
 	err := server.Run()
 	log.Fatalln(err.Error())
 }
 
-func getOpts(context *cli.Context) (string, string, int, string, string) {
+func getOpts(context *cli.Context) (string, string, int, string, string, string) {
 	auth := context.String("auth")
 	mongoDBURL := context.String("mongodb-url")
 	port := context.Int("port")
 	redisNamespace := context.String("redis-namespace")
 	redisURL := context.String("redis-url")
+	shortProtocol := context.String("short-protocol")
 
-	return auth, mongoDBURL, port, redisNamespace, redisURL
+	return auth, mongoDBURL, port, redisNamespace, redisURL, shortProtocol
 }
 
 func version() string {

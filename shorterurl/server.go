@@ -19,13 +19,14 @@ type Server interface {
 
 // New constructs a new Server that listens for incoming
 // HTTP requests
-func New(auth, mongoDBURL string, port int, redisNamespace, redisURL string) Server {
+func New(auth, mongoDBURL string, port int, redisNamespace, redisURL, shortProtocol string) Server {
 	return &HTTPServer{
 		auth:           auth,
 		mongoDBURL:     mongoDBURL,
 		port:           port,
 		redisNamespace: redisNamespace,
 		redisURL:       redisURL,
+		shortProtocol:  shortProtocol,
 	}
 }
 
@@ -37,6 +38,7 @@ type HTTPServer struct {
 	port           int
 	redisNamespace string
 	redisURL       string
+	shortProtocol  string
 }
 
 // Run starts listing for incoming requests. This
@@ -50,7 +52,7 @@ func (server *HTTPServer) Run() error {
 	mongoDB := mongo.DB(mongoDatabaseName(server.mongoDBURL))
 
 	addr := fmt.Sprintf(":%v", server.port)
-	router := newRouter(mongoDB)
+	router := newRouter(mongoDB, server.shortProtocol)
 	return http.ListenAndServe(addr, router)
 }
 

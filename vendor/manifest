@@ -10,6 +10,14 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/Pallinder/go-randomdata",
+			"repository": "https://github.com/Pallinder/go-randomdata",
+			"vcs": "git",
+			"revision": "8c3362a5e6781e0d1046f1267b3c1f19b2cde334",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/coreos/go-semver/semver",
 			"repository": "https://github.com/coreos/go-semver",
 			"vcs": "git",
