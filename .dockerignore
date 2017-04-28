@@ -1,0 +1,8 @@
+.git
+shorter-url
+entrypoint/shorter-url
+go-shorter-url
+entrypoint/go-shorter-url
+build.sh
+cross-compile.sh
+README.md
