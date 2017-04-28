@@ -1,7 +1,8 @@
 #!/bin/bash
 
-APP_NAME=meshblu-connector-eradicator
+APP_NAME=shorter-url
 BUILD_DIR=$PWD/dist
+IMAGE_NAME=local/$APP_NAME
 
 build_on_local() {
   local goos="$1"
@@ -12,20 +13,16 @@ build_on_local() {
     extension=".exe"
   fi
 
-  env GOOS="$goos" GOARCH="$goarch" go build -a -tags netgo -installsuffix cgo -ldflags '-w' -o "${BUILD_DIR}/${APP_NAME}-${goos}-${goarch}${extension}" .
-}
-
-build_osx_on_local() {
-  build_on_local "darwin" "amd64"
-}
-
-build_windows_amd64_on_local() {
-  build_on_local "windows" "amd64"
+  env CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" go build -a -tags netgo -installsuffix cgo -ldflags '-w' -o "${BUILD_DIR}/${APP_NAME}-${goos}-${goarch}${extension}" .
 }
 
 init() {
-  rm -rf $BUILD_DIR/ \
-  && mkdir -p $BUILD_DIR/
+  rm -rf "${BUILD_DIR:?}/" \
+  && mkdir -p "${BUILD_DIR:?}/"
+}
+
+package() {
+  docker build --tag $IMAGE_NAME:latest entrypoint
 }
 
 fatal() {
@@ -34,8 +31,8 @@ fatal() {
   exit 1
 }
 
-build_all(){
-  for goos in darwin linux windows; do
+cross_compile_build(){
+  for goos in darwin linux; do
     for goarch in 386 amd64; do
       build_on_local "$goos" "$goarch" > /dev/null
     done
@@ -43,24 +40,13 @@ build_all(){
 }
 
 main() {
-  local mode="$1"
+  local goos="$1"
 
-  if [ "$mode" == "all" ]; then
-    build_all
+  if [ -n "$goos" ]; then
+    build_on_local "$goos" "amd64" > /dev/null
     exit $?
   fi
 
-  if [ "$mode" == "osx" ]; then
-    build_osx_on_local
-    exit $?
-  fi
-
-  if [ "$mode" == "windows" ]; then
-    build_windows_amd64_on_local
-    exit $?
-  fi
-
-  echo "Usage: ./build.sh <osx/windows/all>"
-  exit 1
+  cross_compile_build
 }
-main $@
+main "$@"
