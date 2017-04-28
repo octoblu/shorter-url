@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/garyburd/redigo/redis"
 	"github.com/gorilla/mux"
 
 	mgo "gopkg.in/mgo.v2"
@@ -18,8 +19,8 @@ type Controller interface {
 
 // NewController returns a new controller instance
 // for retrieving URLs
-func NewController(mongoDB *mgo.Database, shortProtocol string) Controller {
-	service := newService(mongoDB, shortProtocol)
+func NewController(mongoDB *mgo.Database, redisConn redis.Conn, redisNamespace, shortProtocol string) Controller {
+	service := newService(mongoDB, redisConn, redisNamespace, shortProtocol)
 	return &_Controller{service: service}
 }
 
@@ -33,6 +34,7 @@ func (controller *_Controller) Get(rw http.ResponseWriter, r *http.Request) {
 	longURL, err := controller.service.GetLongURL(r.Host, token)
 	if err != nil {
 		http.Error(rw, fmt.Sprintf("Failed to retrieve longUrl: %v", err.Error()), 500)
+		return
 	}
 	http.Redirect(rw, r, longURL, http.StatusPermanentRedirect)
 }

@@ -43,7 +43,7 @@ func main() {
 			Name:   "redis-namespace, n",
 			EnvVar: "REDIS_NAMESPACE",
 			Usage:  "Redis namespace to use when caching",
-			Value:  "redis://localhost:6379",
+			Value:  "shorter-url",
 		},
 		cli.StringFlag{
 			Name:   "redis-url, r",

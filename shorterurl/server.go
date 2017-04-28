@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/garyburd/redigo/redis"
+
 	mgo "gopkg.in/mgo.v2"
 )
 
@@ -51,8 +53,13 @@ func (server *HTTPServer) Run() error {
 	}
 	mongoDB := mongo.DB(mongoDatabaseName(server.mongoDBURL))
 
+	redisConn, err := redis.DialURL(server.redisURL)
+	if err != nil {
+		return err
+	}
+
 	addr := fmt.Sprintf(":%v", server.port)
-	router := newRouter(mongoDB, server.shortProtocol)
+	router := newRouter(mongoDB, redisConn, server.redisNamespace, server.shortProtocol)
 	return http.ListenAndServe(addr, router)
 }
 

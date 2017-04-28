@@ -27,6 +27,24 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/garyburd/redigo/internal",
+			"repository": "https://github.com/garyburd/redigo",
+			"vcs": "git",
+			"revision": "ac91d6ff49bd0d278a90201de77a4f8ad9628e25",
+			"branch": "master",
+			"path": "internal",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/garyburd/redigo/redis",
+			"repository": "https://github.com/garyburd/redigo",
+			"vcs": "git",
+			"revision": "ac91d6ff49bd0d278a90201de77a4f8ad9628e25",
+			"branch": "master",
+			"path": "/redis",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/gorilla/context",
 			"repository": "https://github.com/gorilla/context",
 			"vcs": "git",
