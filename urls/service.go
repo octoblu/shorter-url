@@ -1,11 +1,13 @@
 package urls
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 
 	randomdata "github.com/Pallinder/go-randomdata"
 	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type _Service struct {
@@ -18,7 +20,7 @@ func newService(mongoDB *mgo.Database, shortProtocol string) *_Service {
 }
 
 func (service *_Service) Create(longURL, scheme, host string) (*_ShorterURL, error) {
-	shortURL, err := service.generateShortURL(service.shortProtocol, host)
+	shortURL, err := service.generateUniqueShortURL(host)
 	if err != nil {
 		return nil, err
 	}
@@ -32,12 +34,27 @@ func (service *_Service) Create(longURL, scheme, host string) (*_ShorterURL, err
 	return shorterURL, err
 }
 
-func (service *_Service) generateShortURL(scheme, host string) (string, error) {
+func (service *_Service) generateUniqueShortURL(host string) (string, error) {
+	for i := 0; i < 10; i++ {
+		shortURL := service.generateShortURL(host)
+		n, err := service.urls.Find(bson.M{"shortUrl": shortURL}).Count()
+		if err != nil {
+			return "", err
+		}
+
+		if n == 0 {
+			return shortURL, nil
+		}
+	}
+	return "", fmt.Errorf("Failed to generate a unique url in 10 tries")
+}
+
+func (service *_Service) generateShortURL(host string) string {
 	token := strings.ToLower(randomdata.Letters(4))
 
-	shortURL := &url.URL{Scheme: scheme, Host: host, Path: token}
+	shortURL := &url.URL{Scheme: service.shortProtocol, Host: host, Path: token}
 
-	return shortURL.String(), nil
+	return shortURL.String()
 }
 
 type _ShorterURL struct {
