@@ -1,5 +1,13 @@
 package shorterurl
 
+import (
+	"fmt"
+	"net/http"
+	"strings"
+
+	mgo "gopkg.in/mgo.v2"
+)
+
 // Server serves up an API for creating and resolving
 // short URLs
 type Server interface {
@@ -35,5 +43,18 @@ type HTTPServer struct {
 // function will run until the server exits due to
 // an error.
 func (server *HTTPServer) Run() error {
-	return nil
+	mongo, err := mgo.Dial(server.mongoDBURL)
+	if err != nil {
+		return err
+	}
+	mongoDB := mongo.DB(mongoDatabaseName(server.mongoDBURL))
+
+	addr := fmt.Sprintf(":%v", server.port)
+	router := newRouter(mongoDB)
+	return http.ListenAndServe(addr, router)
+}
+
+func mongoDatabaseName(mongoDBURL string) string {
+	parts := strings.Split(mongoDBURL, "/")
+	return parts[len(parts)-1]
 }

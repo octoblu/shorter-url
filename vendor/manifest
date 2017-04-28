@@ -19,6 +19,22 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/gorilla/context",
+			"repository": "https://github.com/gorilla/context",
+			"vcs": "git",
+			"revision": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/gorilla/mux",
+			"repository": "https://github.com/gorilla/mux",
+			"vcs": "git",
+			"revision": "4c1c3952b7d9d0a061a3fa7b36fd373ba0398ebc",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/urfave/cli",
 			"repository": "https://github.com/urfave/cli",
 			"vcs": "git",
@@ -32,6 +48,31 @@
 			"vcs": "git",
 			"revision": "ff4a55a20a86994118644bbddc6a216da193cc13",
 			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "golang.org/x/net/context",
+			"repository": "https://go.googlesource.com/net",
+			"vcs": "git",
+			"revision": "da118f7b8e5954f39d0d2130ab35d4bf0e3cb344",
+			"branch": "master",
+			"path": "/context",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/mgo.v2",
+			"repository": "https://gopkg.in/mgo.v2",
+			"vcs": "git",
+			"revision": "3f83fa5005286a7fe593b055f0d7771a7dce4655",
+			"branch": "v2",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/tomb.v2",
+			"repository": "https://gopkg.in/tomb.v2",
+			"vcs": "git",
+			"revision": "d5d1b5820637886def9eef33e03a27a9f166942c",
+			"branch": "v2",
 			"notests": true
 		},
 		{
