@@ -95,8 +95,6 @@ func (server *HTTPServer) dialMongo() (*mgo.Database, error) {
 		return nil, err
 	}
 
-	defer session.Close()
-
 	mongoDB := session.DB(mongoDatabaseName(mongoDBURL))
 	return mongoDB, nil
 }

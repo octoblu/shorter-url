@@ -43,7 +43,7 @@ func (service *_Service) Create(longURL, scheme, host string) (*_ShorterURL, err
 }
 
 func (service *_Service) generateShortURL(host string) string {
-	token := strings.ToLower(randomdata.Letters(1))
+	token := strings.ToLower(randomdata.Letters(4))
 
 	shortURL := &url.URL{Scheme: service.shortProtocol, Host: host, Path: token}
 
