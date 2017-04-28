@@ -65,7 +65,7 @@ func run(context *cli.Context) {
 	auth, mongoDBURL, port, redisNamespace, redisURL, shortProtocol := getOpts(context)
 
 	rand.Seed(time.Now().UnixNano())
-	server := shorterurl.New(auth, mongoDBURL, port, redisNamespace, redisURL, shortProtocol)
+	server := shorterurl.New(auth, mongoDBURL, port, redisNamespace, redisURL, shortProtocol, version())
 	fmt.Printf("Listening on 0.0.0.0:%v\n", port)
 	err := server.Run()
 	log.Fatalln(err.Error())
