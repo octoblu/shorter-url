@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/coreos/go-semver/semver"
+	"github.com/octoblu/shorter-url/shorterurl"
 	"github.com/urfave/cli"
 	De "github.com/visionmedia/go-debug"
 )
