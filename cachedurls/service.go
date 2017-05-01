@@ -14,15 +14,15 @@ type _Service struct {
 	cache          redis.Conn
 	redisNamespace string
 	shortProtocol  string
-	urls           *mgo.Collection
+	mongoSession   *mgo.Session
 }
 
-func newService(cache redis.Conn, mongoDB *mgo.Database, redisNamespace, shortProtocol string) *_Service {
+func newService(cache redis.Conn, mongoSession *mgo.Session, redisNamespace, shortProtocol string) *_Service {
 	return &_Service{
 		cache:          cache,
 		redisNamespace: redisNamespace,
 		shortProtocol:  shortProtocol,
-		urls:           mongoDB.C("urls"),
+		mongoSession:   mongoSession,
 	}
 }
 
@@ -64,7 +64,10 @@ func (service *_Service) getLongURLFromCache(shortURL string) (string, error) {
 
 func (service *_Service) getLongURLFromMongo(shortURL string) (string, error) {
 	shorterURL := &_ShorterURL{}
-	err := service.urls.Find(bson.M{"shortUrl": shortURL}).One(shorterURL)
+	session := service.mongoSession.Copy()
+	urls := session.DB("").C("urls")
+	err := urls.Find(bson.M{"shortUrl": shortURL}).One(shorterURL)
+	session.Close()
 	if err != nil {
 		return "", err
 	}
