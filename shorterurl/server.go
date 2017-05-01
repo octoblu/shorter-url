@@ -50,7 +50,7 @@ type HTTPServer struct {
 // function will run until the server exits due to
 // an error.
 func (server *HTTPServer) Run(onListen func()) error {
-	mongoDB, err := server.dialMongo()
+	mongoSession, err := server.dialMongo()
 	if err != nil {
 		return err
 	}
@@ -61,19 +61,18 @@ func (server *HTTPServer) Run(onListen func()) error {
 	}
 
 	addr := fmt.Sprintf(":%v", server.port)
-	router := newRouter(server.auth, cache, mongoDB, server.redisNamespace, server.shortProtocol, server.version)
+	router := newRouter(server.auth, cache, mongoSession, server.redisNamespace, server.shortProtocol, server.version)
 	onListen()
 	return http.ListenAndServe(addr, router)
 }
 
-func (server *HTTPServer) dialMongo() (*mgo.Database, error) {
+func (server *HTTPServer) dialMongo() (*mgo.Session, error) {
 	if !strings.HasSuffix(server.mongoDBURL, "?ssl=true") {
 		mongo, err := mgo.Dial(server.mongoDBURL)
 		if err != nil {
 			return nil, err
 		}
-		mongoDB := mongo.DB(mongoDatabaseName(server.mongoDBURL))
-		return mongoDB, err
+		return mongo, err
 	}
 
 	mongoDBURL := strings.TrimSuffix(server.mongoDBURL, "?ssl=true")
@@ -95,11 +94,5 @@ func (server *HTTPServer) dialMongo() (*mgo.Database, error) {
 		return nil, err
 	}
 
-	mongoDB := session.DB(mongoDatabaseName(mongoDBURL))
-	return mongoDB, nil
-}
-
-func mongoDatabaseName(mongoDBURL string) string {
-	parts := strings.Split(mongoDBURL, "/")
-	return parts[len(parts)-1]
+	return session, nil
 }

@@ -12,9 +12,9 @@ import (
 	"github.com/octoblu/shorter-url/urls"
 )
 
-func newRouter(auth string, cache redis.Conn, mongoDB *mgo.Database, redisNamespace, shortProtocol, version string) http.Handler {
-	urlsController := urls.NewController(auth, cache, mongoDB, redisNamespace, shortProtocol)
-	cachedUrlsController := cachedurls.NewController(cache, mongoDB, redisNamespace, shortProtocol)
+func newRouter(auth string, cache redis.Conn, mongoSession *mgo.Session, redisNamespace, shortProtocol, version string) http.Handler {
+	urlsController := urls.NewController(auth, cache, mongoSession, redisNamespace, shortProtocol)
+	cachedUrlsController := cachedurls.NewController(cache, mongoSession, redisNamespace, shortProtocol)
 
 	router := mux.NewRouter()
 
