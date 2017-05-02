@@ -20,6 +20,11 @@ type Controller interface {
 	// Delete removes a short url from the database
 	// and cache
 	Delete(rw http.ResponseWriter, r *http.Request)
+
+	// Get retrieves a short url and redirects the user
+	// This is the only endpoint that does not require
+	// authentication
+	Get(rw http.ResponseWriter, r *http.Request)
 }
 
 // NewController returns a new controller instance
@@ -76,6 +81,17 @@ func (controller *_Controller) Delete(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	rw.WriteHeader(204)
+}
+
+func (controller *_Controller) Get(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	token := vars["token"]
+	longURL, err := controller.service.GetLongURL(r.Host, token)
+	if err != nil {
+		http.Error(rw, fmt.Sprintf("Failed to retrieve longUrl: %v", err.Error()), 500)
+		return
+	}
+	http.Redirect(rw, r, longURL, http.StatusPermanentRedirect)
 }
 
 func (controller *_Controller) authenticated(username, password string, authPresent bool) bool {

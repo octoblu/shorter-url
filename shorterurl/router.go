@@ -1,33 +1,28 @@
 package shorterurl
 
 import (
-	"fmt"
 	"net/http"
 
 	mgo "gopkg.in/mgo.v2"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/gorilla/mux"
-	"github.com/octoblu/shorter-url/cachedurls"
+	"github.com/octoblu/shorter-url/serverinfo"
 	"github.com/octoblu/shorter-url/urls"
 )
 
 func newRouter(auth string, cache redis.Conn, mongoSession *mgo.Session, redisNamespace, shortProtocol, version string) http.Handler {
+	serverInfoController := serverinfo.New(version)
 	urlsController := urls.NewController(auth, cache, mongoSession, redisNamespace, shortProtocol)
-	cachedUrlsController := cachedurls.NewController(cache, mongoSession, redisNamespace, shortProtocol)
 
 	router := mux.NewRouter()
 
-	router.Methods("GET").Path("/healthcheck").HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		rw.Write([]byte("{\"online\":true}"))
-	})
-	router.Methods("GET").Path("/version").HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		rw.Write([]byte(fmt.Sprintf("{\"version\":\"%v\"}", version)))
-	})
+	router.Methods("GET").Path("/healthcheck").HandlerFunc(serverInfoController.Healthcheck)
+	router.Methods("GET").Path("/version").HandlerFunc(serverInfoController.Version)
 
 	router.Methods("POST").Path("/").HandlerFunc(urlsController.Create)
 	router.Methods("DELETE").Path("/{token}").HandlerFunc(urlsController.Delete)
-	router.Methods("GET").Path("/{token}").HandlerFunc(cachedUrlsController.Get)
+	router.Methods("GET").Path("/{token}").HandlerFunc(urlsController.Get)
 
 	return router
 }
