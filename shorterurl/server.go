@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 	mgo "gopkg.in/mgo.v2"
@@ -55,13 +56,23 @@ func (server *HTTPServer) Run(onListen func()) error {
 		return err
 	}
 
-	cache, err := redis.DialURL(server.redisURL)
-	if err != nil {
-		return err
+	redisPool := &redis.Pool{
+		MaxIdle:     3,
+		IdleTimeout: 240 * time.Second,
+		Dial: func() (redis.Conn, error) {
+			return redis.DialURL(server.redisURL)
+		}, // Other pool configuration not shown in this example.
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			if time.Since(t) < time.Minute {
+				return nil
+			}
+			_, err := c.Do("PING")
+			return err
+		},
 	}
 
 	addr := fmt.Sprintf(":%v", server.port)
-	router := newRouter(server.auth, cache, mongoSession, server.redisNamespace, server.shortProtocol, server.version)
+	router := newRouter(server.auth, redisPool, mongoSession, server.redisNamespace, server.shortProtocol, server.version)
 	onListen()
 	return http.ListenAndServe(addr, router)
 }

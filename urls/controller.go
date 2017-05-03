@@ -29,8 +29,8 @@ type Controller interface {
 
 // NewController returns a new controller instance
 // for managing urls
-func NewController(auth string, cache redis.Conn, mongoSession *mgo.Session, redisNamespace, shortProtocol string) Controller {
-	service := newService(cache, mongoSession, redisNamespace, shortProtocol)
+func NewController(auth string, redisPool *redis.Pool, mongoSession *mgo.Session, redisNamespace, shortProtocol string) Controller {
+	service := newService(redisPool, mongoSession, redisNamespace, shortProtocol)
 	return &_Controller{auth: auth, service: service}
 }
 

@@ -12,15 +12,15 @@ import (
 )
 
 type _Service struct {
-	cache          redis.Conn
+	redisPool      *redis.Pool
 	redisNamespace string
 	shortProtocol  string
 	mongoSession   *mgo.Session
 }
 
-func newService(cache redis.Conn, mongoSession *mgo.Session, redisNamespace, shortProtocol string) *_Service {
+func newService(redisPool *redis.Pool, mongoSession *mgo.Session, redisNamespace, shortProtocol string) *_Service {
 	return &_Service{
-		cache:          cache,
+		redisPool:      redisPool,
 		redisNamespace: redisNamespace,
 		shortProtocol:  shortProtocol,
 		mongoSession:   mongoSession,
@@ -58,7 +58,9 @@ func (service *_Service) Delete(host, token string) error {
 	shortURL := (&url.URL{Scheme: service.shortProtocol, Host: host, Path: token}).String()
 	key := fmt.Sprintf("%v:%v", service.redisNamespace, shortURL)
 
-	_, err := service.cache.Do("DEL", key)
+	cache := service.redisPool.Get()
+	defer cache.Close()
+	_, err := cache.Do("DEL", key)
 	if err != nil && err.Error() != "redigo: nil returned" {
 		return nil
 	}
@@ -91,7 +93,9 @@ func (service *_Service) GetLongURL(host, token string) (string, error) {
 
 func (service *_Service) cacheLongURL(shortURL, longURL string) error {
 	key := fmt.Sprintf("%v:%v", service.redisNamespace, shortURL)
-	_, err := service.cache.Do("SET", key, longURL)
+	cache := service.redisPool.Get()
+	defer cache.Close()
+	_, err := cache.Do("SET", key, longURL)
 	return err
 }
 
@@ -105,7 +109,9 @@ func (service *_Service) generateShortURL(host string) string {
 
 func (service *_Service) getLongURLFromCache(shortURL string) (string, error) {
 	key := fmt.Sprintf("%v:%v", service.redisNamespace, shortURL)
-	longURL, err := redis.String(service.cache.Do("GET", key))
+	cache := service.redisPool.Get()
+	defer cache.Close()
+	longURL, err := redis.String(cache.Do("GET", key))
 	if err != nil && err.Error() == "redigo: nil returned" {
 		return "", nil
 	}
