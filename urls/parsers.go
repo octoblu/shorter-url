@@ -28,5 +28,6 @@ func parseCreateBody(body io.ReadCloser) (_CreateBody, error) {
 }
 
 type _CreateBody struct {
-	LongURL string `json:"longUrl"`
+	LongURL  string `json:"longUrl"`
+	ShortURL string `json:"shortUrl"`
 }

@@ -51,7 +51,7 @@ func (controller *_Controller) Create(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shorterURL, err := controller.service.Create(createBody.LongURL, r.Host)
+	shorterURL, err := controller.service.Create(createBody.LongURL, createBody.ShortURL, r.Host)
 	if err != nil {
 		http.Error(rw, fmt.Sprintf("Failed to create shorterUrl: %v", err.Error()), 500)
 		return

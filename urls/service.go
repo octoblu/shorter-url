@@ -27,9 +27,11 @@ func newService(redisPool *redis.Pool, mongoSession *mgo.Session, redisNamespace
 	}
 }
 
-func (service *_Service) Create(longURL, host string) (*_ShorterURL, error) {
+func (service *_Service) Create(longURL, shortURL, host string) (*_ShorterURL, error) {
 	for i := 0; i < 10; i++ {
-		shortURL := service.generateShortURL(host)
+		if shortURL == "" {
+			shortURL = service.generateShortURL(host)
+		}
 
 		shorterURL := &_ShorterURL{
 			LongURL:  longURL,
